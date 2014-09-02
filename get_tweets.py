@@ -9,18 +9,26 @@ from unidecode import unidecode
 f = open('websites.txt','r')
 websites = [site.strip() for site in f]
 
-print websites
+#for each site, create a page
+pages = [requests.get(site) for site in websites]
 
-page = requests.get(websites[0])
-tree = html.fromstring(page.text)
+#for each page create a tree
+trees = [html.fromstring(page.text) for page in pages]
 
-tweets = tree.xpath('//p[@class="text"]/text()')
+#for each tree create a list of all tweets from that month, then flatten
+#then unicode
+tweets = [tree.xpath('//p[@class="text"]/text()') for tree in trees]
+tweets = [tweet for sublist in tweets for tweet in sublist]
 tweets_encode = [unidecode(tweet) for tweet in tweets]
 
-hashtags = tree.xpath('//a[@class="hashtag"]/text()')
+#for each tree create a list of all hashtags from that month,  then flatten
+#then unicode
+hashtags = [tree.xpath('//a[@class="hashtag"]/text()') for tree in trees]
+hashtags = [hashtag for sublist in hashtags for hashtag in sublist]
 hashtags_encode = [unidecode(hashtag) for hashtag in hashtags]
 
-print tweets_encode
-print hashtags_encode
+#dump both to pickle dbs
+pickle.dump(tweets_encode, open('ye_tweets.p','wb'))
+pickle.dump(hashtags_encode, open('ye_hashtags.p','wb'))
 
 
